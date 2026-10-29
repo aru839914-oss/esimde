@@ -1,0 +1,49 @@
+<div class="modal fade" id="eventModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content event-modal">
+      <div class="modal-header border-0 pb-0">
+        <span class="cat-chip" id="emCategory"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Жабу"></button>
+      </div>
+      <div class="modal-body">
+        <div class="em-loading text-center py-4" id="emLoading"><div class="spinner-border text-primary" role="status"></div></div>
+        <div id="emBody" class="d-none">
+          <h4 class="em-title" id="emTitle"></h4>
+          <div class="em-status" id="emStatus"></div>
+          <p class="em-desc" id="emDesc"></p>
+          <div class="em-grid">
+            <div><span>Күні</span><strong id="emDate"></strong></div>
+            <div><span>Уақыты</span><strong id="emTime"></strong></div>
+            <div><span>Маңыздылығы</span><strong id="emPriority"></strong></div>
+            <div><span>Қалған уақыт</span><strong id="emRelative"></strong></div>
+            <div class="full"><span>Еске салу</span><strong id="emReminder"></strong></div>
+            <div class="full"><span>Қайталану</span><strong id="emRecurrence"></strong></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button class="btn btn-light text-danger" id="emDelete"><i class="bi bi-trash"></i> Жою</button>
+        <a class="btn btn-light" id="emEdit" href="#"><i class="bi bi-pencil"></i> Өңдеу</a>
+        <button class="btn btn-primary" id="emComplete"><i class="bi bi-check2-circle"></i> <span>Орындалды</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content text-center p-2">
+      <div class="modal-body">
+        <div class="delete-icon"><i class="bi bi-trash3"></i></div>
+        <h5 class="fw-bold mt-3">Оқиғаны жою</h5>
+        <p class="text-muted mb-0">«<span id="deleteTitle"></span>» оқиғасын жойғыңыз келе ме? Бұл әрекетті болдырмау мүмкін емес.</p>
+      </div>
+      <form method="post" id="deleteForm" class="d-flex gap-2 px-3 pb-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="next" id="deleteNext" value="">
+        <button type="button" class="btn btn-light flex-fill" data-bs-dismiss="modal">Болдырмау</button>
+        <button type="submit" class="btn btn-danger flex-fill">Иә, жою</button>
+      </form>
+    </div>
+  </div>
+</div>

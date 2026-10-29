@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Санаттар{% endblock %}
+{% block page_title %}Санаттар{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Санаттар</h1>
+    <p>Оқиғалар санаттар бойынша бөлінеді. Әр санаттың өз түсі мен иконкасы бар.</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-xl-8">
+    <div class="category-grid">
+      {% for key, c in CATEGORIES.items() %}
+      {% set cnt = counts.get(key, {'total': 0, 'done': 0}) %}
+      <a href="{{ url_for('main.events', category=key) }}" class="category-card" style="--cat: {{ c.color }}">
+        <div class="cat-icon"><i class="bi {{ c.icon }}"></i></div>
+        <div class="cat-name">{{ c.label }}</div>
+        <div class="cat-count">{{ cnt.total }} оқиға</div>
+        <div class="progress cat-progress" role="progressbar" aria-label="Орындалу">
+          <div class="progress-bar" style="width: {{ (cnt.done * 100 / cnt.total)|round|int if cnt.total else 0 }}%"></div>
+        </div>
+        <div class="cat-done">{{ cnt.done }} орындалды</div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="col-xl-4">
+    <div class="card-panel">
+      <div class="panel-head"><h2>Санаттар бойынша бөліну</h2></div>
+      {% if counts %}
+      <canvas id="categoryChart" height="260"
+              data-labels='{{ CATEGORIES.values()|map(attribute="label")|list|tojson }}'
+              data-colors='{{ CATEGORIES.values()|map(attribute="color")|list|tojson }}'
+              data-values='{{ CATEGORIES.keys()|map("string")|list|tojson }}'
+              data-counts='{{ counts|tojson }}'></canvas>
+      {% else %}
+      <div class="empty-mini"><i class="bi bi-pie-chart"></i> Диаграмма үшін оқиғалар қосыңыз</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+{% if counts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  (function () {
+    const el = document.getElementById('categoryChart');
+    const keys = JSON.parse(el.dataset.values);
+    const counts = JSON.parse(el.dataset.counts);
+    new Chart(el, {
+      type: 'doughnut',
+      data: {
+        labels: JSON.parse(el.dataset.labels),
+        datasets: [{
+          data: keys.map(k => (counts[k] ? counts[k].total : 0)),
+          backgroundColor: JSON.parse(el.dataset.colors),
+          borderWidth: 2, borderColor: '#fff'
+        }]
+      },
+      options: { cutout: '68%', plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: { family: 'Inter' } } } } }
+    });
+  })();
+</script>
+{% endif %}
+{% endblock %}

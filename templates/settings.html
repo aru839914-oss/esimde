@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Баптаулар{% endblock %}
+{% block page_title %}Баптаулар{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Баптаулар</h1>
+    <p>Интерфейс пен хабарландыруларды өзіңізге ыңғайлы етіп баптаңыз.</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <form method="post" class="card-panel settings-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <h2 class="form-section">Жалпы</h2>
+      <div class="setting-row">
+        <div><div class="setting-title">Интерфейс тілі</div><div class="setting-desc">Жүйенің барлық мәтіндері қазақ тілінде.</div></div>
+        <select class="form-select w-auto" name="language" disabled><option selected>Қазақша</option></select>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-title">Уақыт белдеуі</div><div class="setting-desc">Еске салу уақыты осы белдеу бойынша есептеледі.</div></div>
+        <select class="form-select w-auto {% if errors.timezone %}is-invalid{% endif %}" name="timezone">
+          {% for key, label in timezones %}<option value="{{ key }}" {% if user_settings.timezone == key %}selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-title">Күн форматы</div><div class="setting-desc">Оқиға күндерінің көрсетілу түрі. Уақыт 24 сағаттық форматта.</div></div>
+        <select class="form-select w-auto" name="date_format">
+          {% for key, example in date_formats.items() %}<option value="{{ key }}" {% if user_settings.date_format == key %}selected{% endif %}>{{ example }}</option>{% endfor %}
+        </select>
+      </div>
+
+      <h2 class="form-section mt-4">Хабарландырулар</h2>
+      <div class="setting-row">
+        <div><div class="setting-title">Браузерлік хабарландырулар</div><div class="setting-desc">Өшірулі болса, ескертулер тек қосымшаның ішінде көрсетіледі.</div></div>
+        <div class="form-check form-switch m-0">
+          <input class="form-check-input big-switch" type="checkbox" role="switch" name="browser_notifications" id="browserNotifications"
+                 {% if user_settings.browser_notifications %}checked{% endif %}>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-title">Telegram хабарландырулары</div><div class="setting-desc">Telegram қосылған болса, еске салулар ботқа да жіберіледі.</div></div>
+        <div class="form-check form-switch m-0">
+          <input class="form-check-input big-switch" type="checkbox" role="switch" name="telegram_enabled" id="telegramEnabled"
+                 {% if user_settings.telegram_enabled %}checked{% endif %}>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-title">Әдепкі еске салу уақыты</div><div class="setting-desc">Жаңа оқиға формасында алдын ала таңдалады.</div></div>
+        <select class="form-select w-auto" name="default_reminder">
+          {% for key, m in default_modes.items() %}<option value="{{ key }}" {% if user_settings.default_reminder == key %}selected{% endif %}>{{ m.label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="text-end mt-4"><button class="btn btn-primary"><i class="bi bi-check-lg"></i> Сақтау</button></div>
+    </form>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card-panel mb-4" id="telegramCard" data-linked="{{ 1 if tg.linked else 0 }}" data-configured="{{ 1 if tg_configured else 0 }}">
+      <h2 class="form-section">Telegram</h2>
+      <div class="tg-status">
+        <div class="tg-logo"><i class="bi bi-telegram"></i></div>
+        <div class="min-w-0">
+          <div class="ps-title" id="tgTitle">
+            {% if not tg_configured %}Бот бапталмаған{% elif tg.linked %}Қосылған{% else %}Қосылмаған{% endif %}
+          </div>
+          <div class="ps-desc" id="tgDesc">
+            {% if not tg_configured %}Серверде TELEGRAM_BOT_TOKEN көрсетілмеген (.env файлы).
+            {% elif tg.linked %}{% if tg.name %}@{{ tg.name }} · {% endif %}{{ tg.linked_at }}
+            {% else %}Еске салуларды <b>@{{ bot_username }}</b> ботынан алыңыз — сайт жабық болса да келеді.{% endif %}
+          </div>
+        </div>
+      </div>
+      {% if tg_configured %}
+      <div class="d-flex flex-wrap gap-2 mt-3">
+        <button type="button" class="btn btn-primary {% if tg.linked %}d-none{% endif %}" id="tgLinkBtn"><i class="bi bi-telegram"></i> Telegram-ды қосу</button>
+        <button type="button" class="btn btn-light {% if not tg.linked %}d-none{% endif %}" id="tgTestBtn"><i class="bi bi-send"></i> Тексеру хабарламасы</button>
+        <button type="button" class="btn btn-light text-danger {% if not tg.linked %}d-none{% endif %}" id="tgUnlinkBtn"><i class="bi bi-x-circle"></i> Ажырату</button>
+      </div>
+      <div class="tg-connect d-none" id="tgWaiting">
+        <div class="tg-qr-wrap">
+          <div class="tg-qr" id="tgQr" aria-label="Telegram QR-коды"></div>
+          <div class="tg-qr-hint"><i class="bi bi-phone"></i> Телефонның камерасымен сканерлеп, ботта <b>Start</b> басыңыз</div>
+        </div>
+        <div class="tg-or"><span>немесе</span></div>
+        <div class="d-grid gap-2">
+          <a class="btn btn-outline" id="tgAppLink" href="#"><i class="bi bi-display"></i> Telegram қосымшасында ашу</a>
+          <a class="btn btn-outline" id="tgWebLink" href="#" target="_blank" rel="noopener"><i class="bi bi-globe"></i> Telegram Web-те ашу</a>
+        </div>
+        <div class="tg-or"><span>немесе ботқа мына команданы жіберіңіз</span></div>
+        <div class="tg-command">
+          <code id="tgCommand"></code>
+          <button type="button" class="btn-icon sm" id="tgCopy" title="Көшіру" aria-label="Көшіру"><i class="bi bi-copy"></i></button>
+        </div>
+        <p class="small text-muted mt-3 mb-0"><span class="spinner-border spinner-border-sm me-1"></span> Қосылуды күтудеміз… Сілтеме 15 минут жарамды.</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="card-panel">
+      <h2 class="form-section">Push хабарландырулары (телефон / компьютер)</h2>
+      <div class="permission-status" id="permissionStatus">
+        <div class="ps-icon"><i class="bi bi-question-circle"></i></div>
+        <div><div class="ps-title">Тексерілуде…</div><div class="ps-desc"></div></div>
+      </div>
+      <div class="d-flex flex-wrap gap-2 mt-3">
+        <button type="button" class="btn btn-primary" id="pushEnableBtn"><i class="bi bi-bell"></i> Push-ты қосу</button>
+        <button type="button" class="btn btn-light" id="testNotificationBtn"><i class="bi bi-send"></i> Тексеру хабарламасы</button>
+        <button type="button" class="btn btn-light text-danger d-none" id="pushDisableBtn"><i class="bi bi-bell-slash"></i> Осы құрылғыда өшіру</button>
+      </div>
+      <p class="small text-muted mt-3 mb-0">
+        Push қосылса, еске салулар сайт жабық болса да келеді — «Орындалды» және «10 мин» батырмаларымен.
+        Рұқсат берілмесе де жүйе жұмыс істейді: еске салулар сайттың ішінде Toast ретінде көрсетіледі.
+      </p>
+    </div>
+
+    <div class="card-panel mt-4">
+      <h2 class="form-section">Телефонға орнату</h2>
+      <div class="install-row">
+        <img src="{{ url_for('static', filename='img/icon-192.png') }}" alt="" class="install-icon">
+        <div class="min-w-0">
+          <div class="ps-title">Esimde қолданбасы</div>
+          <div class="ps-desc" id="installStatus">Сайтты қолданба ретінде басты экранға қосуға болады.</div>
+        </div>
+      </div>
+      <button type="button" class="btn btn-primary mt-3 d-none" id="installBtn"><i class="bi bi-download"></i> Орнату</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+{% endblock %}

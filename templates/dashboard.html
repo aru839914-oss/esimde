@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import event_item, empty_state %}
+{% block title %}Басты бет{% endblock %}
+{% block page_title %}Басты бет{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Қош келдіңіз, {{ current_user.name }}!</h1>
+    <p>Бүгінгі күніңізді жоспарлаңыз</p>
+  </div>
+  <div class="page-actions">
+    <span class="range-pill"><i class="bi bi-calendar4-event"></i> {{ today_display }}</span>
+    <a href="{{ url_for('main.add_event') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Жаңа оқиға</a>
+  </div>
+</div>
+
+<section class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-icon" style="--c:#4f46e5"><i class="bi bi-collection"></i></div>
+    <div><div class="stat-value" data-stat="total">{{ stats.total }}</div><div class="stat-label">Барлық оқиғалар</div>
+      <div class="stat-extra"><span data-stat="upcoming">{{ stats.upcoming }}</span> алда</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="--c:#0ea5e9"><i class="bi bi-sun"></i></div>
+    <div><div class="stat-value" data-stat="today">{{ stats.today }}</div><div class="stat-label">Бүгінгі оқиғалар</div>
+      <div class="stat-extra"><span data-stat="today_done">{{ stats.today_done }}</span> орындалды</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="--c:#f97316"><i class="bi bi-calendar-week"></i></div>
+    <div><div class="stat-value" data-stat="week">{{ stats.week }}</div><div class="stat-label">Алдағы 7 күнде</div>
+      <div class="stat-extra"><span data-stat="overdue">{{ stats.overdue }}</span> мерзімі өткен</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="--c:#10b981"><i class="bi bi-check2-all"></i></div>
+    <div><div class="stat-value" data-stat="completed">{{ stats.completed }}</div><div class="stat-label">Орындалған</div>
+      <div class="stat-extra"><span data-stat="completed_percent">{{ stats.completed_percent }}</span>% барлығынан</div></div>
+  </div>
+</section>
+
+<div class="row g-4">
+  <div class="col-xl-8">
+    <div class="card-panel">
+      <div class="panel-head">
+        <h2>Алдағы оқиғалар</h2>
+        <a href="{{ url_for('main.events') }}" class="link-more">Барлығы <i class="bi bi-arrow-right"></i></a>
+      </div>
+      {% if upcoming %}
+      <div class="event-list">
+        {% for ev in upcoming %}{{ event_item(ev, actions=False) }}{% endfor %}
+      </div>
+      {% else %}
+      {{ empty_state('bi-calendar-plus', 'Алдағы оқиғалар жоқ', 'Жоспарланған оқиғалар осы жерде көрсетіледі.') }}
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-xl-4">
+    <div class="card-panel">
+      <div class="panel-head">
+        <h2>Жақын еске салулар</h2>
+        <a href="{{ url_for('main.reminders') }}" class="link-more">Барлығы <i class="bi bi-arrow-right"></i></a>
+      </div>
+      <div id="reminderWidget" data-url="{{ url_for('api.upcoming_reminders') }}">
+        <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+      </div>
+    </div>
+    <div class="card-panel mt-4">
+      <div class="panel-head"><h2>Соңғы хабарландырулар</h2></div>
+      <div id="recentNotifications"><div class="skeleton"></div></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

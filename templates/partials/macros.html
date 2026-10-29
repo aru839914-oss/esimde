@@ -1,0 +1,45 @@
+{% macro event_item(ev, actions=True) -%}
+<div class="event-item {% if ev.is_completed %}is-completed{% endif %} {% if ev.is_overdue %}is-overdue{% endif %}"
+     data-item="{{ ev.id }}" style="--cat: {{ ev.category_meta.color }}">
+  <div class="date-badge">
+    <span class="d">{{ ev.day_num }}</span>
+    <span class="m">{{ ev.month_name }}</span>
+  </div>
+  <div class="event-body">
+    <button type="button" class="event-title" data-event-id="{{ ev.id }}">{{ ev.title }}</button>
+    <div class="event-meta">
+      <span><i class="bi bi-calendar3"></i>{{ ev.date_display }}</span>
+      <span><i class="bi bi-clock"></i>{{ ev.event_time }}</span>
+      <span class="cat-chip sm"><i class="bi {{ ev.category_meta.icon }}"></i>{{ ev.category_meta.label }}</span>
+      <span class="prio"><i class="bi bi-flag-fill flag-{{ ev.priority }}"></i>{{ ev.priority_meta.label }}</span>
+      {% if ev.recurrence_label %}<span class="repeat-chip" title="Қайталанады"><i class="bi bi-arrow-repeat"></i>{{ ev.recurrence_label }}</span>{% endif %}
+      {% if ev.reminder_display %}<span class="text-muted" title="Келесі еске салу · {{ ev.reminder_label }}"><i class="bi bi-bell"></i>{{ ev.reminder_display }}{% if ev.reminder_modes|length > 1 %} <em class="rem-more">+{{ ev.reminder_modes|length - 1 }}</em>{% endif %}</span>{% endif %}
+    </div>
+  </div>
+  <div class="event-side">
+    <span class="relative-pill" data-relative>{{ ev.relative }}</span>
+    <div class="event-actions">
+      <button type="button" class="btn-icon sm complete-btn" data-complete="{{ ev.id }}"
+              title="{{ 'Белсенді ету' if ev.is_completed else 'Орындалды деп белгілеу' }}">
+        <i class="bi {{ 'bi-check-circle-fill' if ev.is_completed else 'bi-check2-circle' }}"></i>
+      </button>
+      {% if actions %}
+      <a class="btn-icon sm" href="{{ url_for('main.edit_event', event_id=ev.id) }}" title="Өңдеу"><i class="bi bi-pencil"></i></a>
+      <button type="button" class="btn-icon sm danger" title="Жою"
+              data-delete-url="{{ url_for('main.delete_event', event_id=ev.id) }}" data-delete-title="{{ ev.title }}">
+        <i class="bi bi-trash"></i>
+      </button>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{%- endmacro %}
+
+{% macro empty_state(icon, title, text, button=True) -%}
+<div class="empty-state">
+  <div class="empty-icon"><i class="bi {{ icon }}"></i></div>
+  <h5>{{ title }}</h5>
+  <p>{{ text }}</p>
+  {% if button %}<a href="{{ url_for('main.add_event') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Алғашқы оқиғаңызды қосыңыз</a>{% endif %}
+</div>
+{%- endmacro %}

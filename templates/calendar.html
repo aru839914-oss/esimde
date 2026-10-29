@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Күнтізбе{% endblock %}
+{% block page_title %}Күнтізбе{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Күнтізбе</h1>
+  <div class="page-actions">
+    <div class="dropdown">
+      <button class="btn btn-outline" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+        <i class="bi bi-funnel"></i> Сүзгі <span class="filter-count d-none" id="filterCount"></span>
+      </button>
+      <div class="dropdown-menu dropdown-menu-end filter-menu" id="calendarFilter">
+        <div class="filter-title">Маңыздылық</div>
+        {% for key, p in PRIORITIES.items()|reverse %}
+        <label class="filter-option">
+          <input class="form-check-input" type="checkbox" name="priority" value="{{ key }}" checked>
+          <i class="bi bi-flag-fill flag-{{ key }}"></i> {{ p.label }}
+        </label>
+        {% endfor %}
+        <hr class="dropdown-divider">
+        <label class="filter-option">
+          <input class="form-check-input" type="checkbox" name="completed" checked> Орындалғандарды көрсету
+        </label>
+      </div>
+    </div>
+    <a href="{{ url_for('main.add_event', return_to='calendar') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Жаңа оқиға</a>
+  </div>
+</div>
+
+<div class="tabs-line" id="categoryTabs" role="tablist">
+  <button type="button" class="active" data-category="">Барлық оқиғалар</button>
+  {% for key, c in CATEGORIES.items() %}
+  <button type="button" data-category="{{ key }}">{{ c.label }}</button>
+  {% endfor %}
+</div>
+
+<div class="cal-toolbar">
+  <div class="cal-left">
+    <h2 id="calTitle">&nbsp;</h2>
+    <button type="button" class="btn-chip" id="calToday">Бүгін</button>
+    <button type="button" class="btn-arrow" id="calPrev" aria-label="Алдыңғы"><i class="bi bi-chevron-left"></i></button>
+    <button type="button" class="btn-arrow" id="calNext" aria-label="Келесі"><i class="bi bi-chevron-right"></i></button>
+  </div>
+  <div class="cal-right">
+    <div class="view-switch" id="viewSwitch">
+      <button type="button" data-view="timeGridDay">Күн</button>
+      <button type="button" data-view="timeGridWeek">Апта</button>
+      <button type="button" data-view="dayGridMonth">Ай</button>
+      <button type="button" data-view="multiMonthYear">Жыл</button>
+    </div>
+    <div class="range-pill"><i class="bi bi-calendar4-range"></i><span id="calRange"></span></div>
+  </div>
+</div>
+
+<div class="calendar-panel">
+  <div class="calendar-loading d-none" id="calendarLoading"><div class="spinner-border text-primary"></div></div>
+  <div id="calendar"
+       data-feed="{{ url_for('api.events_feed') }}"
+       data-add-url="{{ url_for('main.add_event') }}"></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+<script src="{{ url_for('static', filename='js/calendar.js') }}"></script>
+{% endblock %}

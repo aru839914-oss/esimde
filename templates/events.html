@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import event_item, empty_state %}
+{% block title %}Барлық оқиғалар{% endblock %}
+{% block page_title %}Барлық оқиғалар{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Барлық оқиғалар</h1>
+    <p>Барлығы: <strong>{{ total }}</strong> оқиға</p>
+  </div>
+  <a href="{{ url_for('main.add_event') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Жаңа оқиға</a>
+</div>
+
+<div class="status-tabs">
+  {% for key, label in [('', 'Барлығы'), ('active', 'Орындалмаған'), ('completed', 'Орындалған'), ('overdue', 'Мерзімі өткен')] %}
+  <a href="{{ url_for('main.events', q=filters.q, category=filters.category, priority=filters.priority, sort=filters.sort, status=key) }}"
+     class="{% if filters.status == key %}active{% endif %}">{{ label }}</a>
+  {% endfor %}
+</div>
+
+<form class="filter-bar card-panel" method="get" id="filterForm">
+  <input type="hidden" name="status" value="{{ filters.status }}">
+  <div class="search-box">
+    <i class="bi bi-search"></i>
+    <input type="search" name="q" class="form-control" placeholder="Оқиғаны іздеу..." value="{{ filters.q }}">
+  </div>
+  <select name="category" class="form-select" data-autosubmit>
+    <option value="">Барлық санаттар</option>
+    {% for key, c in CATEGORIES.items() %}<option value="{{ key }}" {% if filters.category == key %}selected{% endif %}>{{ c.label }}</option>{% endfor %}
+  </select>
+  <select name="priority" class="form-select" data-autosubmit>
+    <option value="">Кез келген маңыздылық</option>
+    {% for key, p in PRIORITIES.items() %}<option value="{{ key }}" {% if filters.priority == key %}selected{% endif %}>{{ p.label }}</option>{% endfor %}
+  </select>
+  <select name="sort" class="form-select" data-autosubmit>
+    {% for key, label in [('date_asc', 'Күні: ертеден кешке'), ('date_desc', 'Күні: кештен ертеге'), ('priority', 'Маңыздылығы бойынша'), ('created_desc', 'Соңғы қосылғандар')] %}
+    <option value="{{ key }}" {% if filters.sort == key %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  <button class="btn btn-primary"><i class="bi bi-funnel"></i> Сүзу</button>
+  {% if filters.q or filters.category or filters.priority or filters.status %}
+  <a href="{{ url_for('main.events') }}" class="btn btn-light">Тазалау</a>
+  {% endif %}
+</form>
+
+<div class="card-panel">
+  {% if events %}
+  <div class="event-list">
+    {% for ev in events %}{{ event_item(ev) }}{% endfor %}
+  </div>
+  {% if pages > 1 %}
+  <nav class="mt-4 d-flex justify-content-center">
+    <ul class="pagination">
+      {% for p in range(1, pages + 1) %}
+      <li class="page-item {% if p == page %}active{% endif %}">
+        <a class="page-link" href="{{ url_for('main.events', page=p, **filters) }}">{{ p }}</a>
+      </li>
+      {% endfor %}
+    </ul>
+  </nav>
+  {% endif %}
+  {% elif filters.q or filters.category or filters.priority or filters.status %}
+  {{ empty_state('bi-search', 'Ештеңе табылмады', 'Сүзгі шарттарын өзгертіп көріңіз.', button=False) }}
+  {% else %}
+  {{ empty_state('bi-calendar-plus', 'Әзірге оқиғалар жоқ', 'Маңызды күндеріңізді қосып, уақытында еске салу алыңыз.') }}
+  {% endif %}
+</div>
+{% endblock %}

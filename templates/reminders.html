@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Еске салулар{% endblock %}
+{% block page_title %}Еске салулар{% endblock %}
+
+{% macro reminder_row(ev, state) -%}
+<div class="reminder-row" style="--cat: {{ ev.category_meta.color }}">
+  <div class="rem-icon"><i class="bi {{ ev.category_meta.icon }}"></i></div>
+  <div class="rem-body">
+    <button type="button" class="event-title" data-event-id="{{ ev.id }}">{{ ev.title }}</button>
+    <div class="event-meta">
+      <span><i class="bi bi-bell"></i>{{ ev.reminder_display }}</span>
+      {% if ev.reminder_kind == 'snooze' %}<span class="repeat-chip"><i class="bi bi-alarm"></i>Кейінге қалдырылған</span>{% endif %}
+      {% if ev.recurrence_label %}<span class="repeat-chip"><i class="bi bi-arrow-repeat"></i>{{ ev.recurrence_label }}</span>{% endif %}
+      <span><i class="bi bi-calendar3"></i>Оқиға: {{ ev.date_display }}, {{ ev.event_time }}</span>
+    </div>
+  </div>
+  <div class="rem-status">
+    {% if state == 'pending' %}
+      {% if ev.is_completed %}<span class="status-pill muted">Оқиға орындалған</span>
+      {% else %}<span class="status-pill info">Жоспарланған</span>{% endif %}
+    {% elif ev.notification_status == 'sent' %}<span class="status-pill success">Жіберілді</span>
+    {% elif ev.notification_status == 'late' %}<span class="status-pill warning">Кешіктіріліп жіберілді</span>
+    {% elif ev.notification_status == 'missed' %}<span class="status-pill danger">Өткізіліп алынды</span>
+    {% elif ev.is_completed %}<span class="status-pill muted">Орындалғандықтан жіберілмеді</span>
+    {% else %}<span class="status-pill info">Өңделуде…</span>{% endif %}
+  </div>
+</div>
+{%- endmacro %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Еске салулар</h1>
+    <p>Жүйе еске салу уақытын автоматты тексеріп, хабарландыру жібереді.</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card-panel h-100">
+      <div class="panel-head"><h2><i class="bi bi-sun text-warning"></i> Бүгінгі еске салулар</h2><span class="count-pill">{{ today_list|length }}</span></div>
+      {% for ev in today_list %}{{ reminder_row(ev, 'pending') }}{% else %}
+      <div class="empty-mini"><i class="bi bi-cup-hot"></i> Бүгін еске салулар жоқ</div>{% endfor %}
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card-panel h-100">
+      <div class="panel-head"><h2><i class="bi bi-hourglass-split text-primary"></i> Алдағы еске салулар</h2><span class="count-pill">{{ upcoming|length }}</span></div>
+      {% for ev in upcoming %}{{ reminder_row(ev, 'pending') }}{% else %}
+      <div class="empty-mini"><i class="bi bi-calendar-check"></i> Алдағы еске салулар жоқ</div>{% endfor %}
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card-panel h-100">
+      <div class="panel-head"><h2><i class="bi bi-clock-history text-secondary"></i> Өткен еске салулар</h2><span class="count-pill">{{ past|length }}</span></div>
+      <div class="scroll-list">
+      {% for ev in past %}{{ reminder_row(ev, 'past') }}{% else %}
+      <div class="empty-mini"><i class="bi bi-inbox"></i> Өткен еске салулар жоқ</div>{% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card-panel h-100">
+      <div class="panel-head"><h2><i class="bi bi-send-check text-success"></i> Жіберілген хабарландырулар</h2><span class="count-pill">{{ notifications|length }}</span></div>
+      <div class="scroll-list">
+      {% for n in notifications %}
+      <div class="notif-row">
+        <i class="bi {{ 'bi-bell-fill text-success' if n.status == 'sent' else 'bi-bell-slash text-warning' }}"></i>
+        <div>
+          {% if n.event_id %}<button type="button" class="event-title small-title" data-event-id="{{ n.event_id }}">{{ n.message }}</button>
+          {% else %}<div class="fw-medium">{{ n.message }}</div>{% endif %}
+          <div class="small text-muted">{{ n.sent_display }}{% if n.status == 'late' %} · кешіктірілген{% endif %}{% if not n.event_id %} · оқиға жойылған{% endif %}</div>
+        </div>
+      </div>
+      {% else %}
+      <div class="empty-mini"><i class="bi bi-envelope-open"></i> Әзірге хабарландыру жіберілмеген</div>
+      {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

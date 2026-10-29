@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% set is_edit = event is not none %}
+{% block title %}{{ 'Оқиғаны өңдеу' if is_edit else 'Жаңа оқиға' }}{% endblock %}
+{% block page_title %}{{ 'Оқиғаны өңдеу' if is_edit else 'Жаңа оқиға' }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <a href="{{ url_for('main.events') }}" class="back-link"><i class="bi bi-arrow-left"></i> Оқиғаларға оралу</a>
+    <h1>{{ 'Оқиғаны өңдеу' if is_edit else 'Жаңа оқиға қосу' }}</h1>
+  </div>
+</div>
+
+{% if is_edit and event.is_past %}
+<div class="alert alert-warning d-flex gap-2 align-items-center">
+  <i class="bi bi-exclamation-triangle"></i>
+  <div>Бұл оқиға өткен уақытқа жоспарланған ({{ event.date_display }}, {{ event.event_time }}). Өзгерткенде күн мен уақытты тексеріңіз.</div>
+</div>
+{% endif %}
+
+<form method="post" class="event-form" id="eventForm" novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="return_to" value="{{ request.args.get('return_to', '') or request.form.get('return_to', '') }}">
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card-panel">
+        <h2 class="form-section">Негізгі мәліметтер</h2>
+        <div class="mb-3">
+          <label class="form-label" for="title">Оқиға атауы <span class="text-danger">*</span></label>
+          <input type="text" id="title" name="title" maxlength="150" class="form-control {% if errors.title %}is-invalid{% endif %}"
+                 value="{{ data.title }}" placeholder="Мысалы: Математика емтиханы" required autofocus>
+          <div class="invalid-feedback">{{ errors.title or 'Оқиға атауын енгізіңіз.' }}</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="description">Сипаттамасы</label>
+          <textarea id="description" name="description" rows="3" maxlength="2000"
+                    class="form-control {% if errors.description %}is-invalid{% endif %}"
+                    placeholder="Қосымша ақпарат (міндетті емес)">{{ data.description }}</textarea>
+          <div class="invalid-feedback">{{ errors.description }}</div>
+        </div>
+
+        <label class="form-label">Санаты</label>
+        <div class="category-picker mb-3">
+          {% for key, c in CATEGORIES.items() %}
+          <input type="radio" class="btn-check" name="category" id="cat-{{ key }}" value="{{ key }}" {% if data.category == key %}checked{% endif %}>
+          <label class="cat-option" for="cat-{{ key }}" style="--cat: {{ c.color }}"><i class="bi {{ c.icon }}"></i>{{ c.label }}</label>
+          {% endfor %}
+        </div>
+
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <label class="form-label" for="event_date">Оқиға күні <span class="text-danger">*</span></label>
+            <input type="date" id="event_date" name="event_date" class="form-control {% if errors.event_date %}is-invalid{% endif %}" value="{{ data.event_date }}" required>
+            <div class="invalid-feedback">{{ errors.event_date or 'Күнді таңдаңыз.' }}</div>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label" for="event_time">Оқиға уақыты <span class="text-danger">*</span></label>
+            <input type="time" id="event_time" name="event_time" class="form-control {% if errors.event_time %}is-invalid{% endif %}" value="{{ data.event_time }}" required>
+            <div class="invalid-feedback">{{ errors.event_time or 'Уақытты таңдаңыз.' }}</div>
+          </div>
+        </div>
+        <div class="form-hint warning d-none mt-3" id="pastWarning">
+          <i class="bi bi-exclamation-triangle"></i> Таңдалған уақыт өтіп кеткен. Оқиға сақталады, бірақ еске салу жіберілмейді.
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card-panel">
+        <h2 class="form-section">Маңыздылық деңгейі</h2>
+        <div class="segmented mb-4">
+          {% for key, p in PRIORITIES.items() %}
+          <input type="radio" class="btn-check" name="priority" id="prio-{{ key }}" value="{{ key }}" {% if data.priority == key %}checked{% endif %}>
+          <label class="seg-option seg-{{ key }}" for="prio-{{ key }}"><i class="bi bi-flag-fill flag-{{ key }}"></i>{{ p.label }}</label>
+          {% endfor %}
+        </div>
+
+        <h2 class="form-section">Еске салу</h2>
+        <div class="mb-3">
+          <label class="form-label">Оқиғадан бұрын <span class="text-muted fw-normal">(бірнешеуін таңдауға болады)</span></label>
+          <div class="reminder-chips" id="reminderChips">
+            {% for key, m in REMINDER_MODES.items() if key != 'none' %}
+            <input type="checkbox" class="btn-check" name="reminders" id="rem-{{ key }}" value="{{ key }}"
+                   data-minutes="{{ m.minutes or '' }}" {% if key in data.reminders %}checked{% endif %}>
+            <label class="rem-chip" for="rem-{{ key }}">{% if key == 'custom' %}<i class="bi bi-calendar-event"></i>{% endif %}{{ m.short }}</label>
+            {% endfor %}
+          </div>
+          {% if errors.reminder_mode %}<div class="text-danger small mt-1">{{ errors.reminder_mode }}</div>{% endif %}
+          <div class="form-text" id="noReminderHint">Ешқайсысы таңдалмаса — еске салусыз.</div>
+        </div>
+        <div class="mb-3 {% if 'custom' not in data.reminders %}d-none{% endif %}" id="customReminderWrap">
+          <label class="form-label" for="reminder_custom">Еске салу уақыты</label>
+          <input type="datetime-local" id="reminder_custom" name="reminder_custom"
+                 class="form-control {% if errors.reminder_custom %}is-invalid{% endif %}" value="{{ data.reminder_custom }}">
+          <div class="invalid-feedback">{{ errors.reminder_custom }}</div>
+        </div>
+        <div class="reminder-preview" id="reminderPreview"></div>
+        {% if is_edit and event.reminder_sent %}
+        <div class="form-hint mt-2"><i class="bi bi-info-circle"></i> Жіберілген еске салулар қайталанбайды. Уақытын өзгертсеңіз, олар қайта жоспарланады.</div>
+        {% endif %}
+
+        <h2 class="form-section mt-4">Қайталану</h2>
+        <select id="recurrence" name="recurrence" class="form-select {% if errors.recurrence %}is-invalid{% endif %}">
+          {% for key, r in RECURRENCE.items() %}
+          <option value="{{ key }}" {% if data.recurrence == key %}selected{% endif %}>{{ r.label }}</option>
+          {% endfor %}
+        </select>
+        <div class="invalid-feedback">{{ errors.recurrence }}</div>
+        <div class="form-text">Оқиға өткен соң немесе «Орындалды» басылғанда келесі күнге автоматты ауысады.</div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-lg w-100"><i class="bi bi-check-lg"></i> Сақтау</button>
+        <a href="{{ url_for('main.events') }}" class="btn btn-light w-100">Болдырмау</a>
+        {% if is_edit %}
+        <button type="button" class="btn btn-link text-danger w-100"
+                data-delete-url="{{ url_for('main.delete_event', event_id=event.id) }}" data-delete-title="{{ event.title }}">
+          <i class="bi bi-trash"></i> Оқиғаны жою
+        </button>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock %}

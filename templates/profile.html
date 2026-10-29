@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Жеке кабинет{% endblock %}
+{% block page_title %}Жеке кабинет{% endblock %}
+{% block content %}
+<div class="profile-card card-panel">
+  <div class="profile-cover"></div>
+  <div class="profile-main">
+    <div class="profile-avatar">{{ current_user.name[:1]|upper }}</div>
+    <div class="profile-info">
+      <h1>{{ current_user.name }}</h1>
+      <div class="text-muted"><i class="bi bi-envelope"></i> {{ current_user.email }}</div>
+      <div class="text-muted small mt-1"><i class="bi bi-calendar-check"></i> Тіркелген күні: {{ joined }}</div>
+    </div>
+    <form method="post" action="{{ url_for('auth.logout') }}" class="ms-md-auto">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-light text-danger"><i class="bi bi-box-arrow-right"></i> Шығу</button>
+    </form>
+  </div>
+</div>
+
+<section class="stats-grid three mt-4">
+  <div class="stat-card">
+    <div class="stat-icon" style="--c:#4f46e5"><i class="bi bi-collection"></i></div>
+    <div><div class="stat-value">{{ stats.total }}</div><div class="stat-label">Барлық оқиғалар</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="--c:#10b981"><i class="bi bi-check2-all"></i></div>
+    <div><div class="stat-value">{{ stats.completed }}</div><div class="stat-label">Орындалған оқиғалар</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="--c:#f97316"><i class="bi bi-hourglass-split"></i></div>
+    <div><div class="stat-value">{{ stats.upcoming }}</div><div class="stat-label">Алдағы оқиғалар</div></div>
+  </div>
+</section>
+
+<div class="card-panel mt-4">
+  <div class="panel-head"><h2>Жылдам әрекеттер</h2></div>
+  <div class="quick-links">
+    <a href="{{ url_for('main.add_event') }}"><i class="bi bi-plus-circle"></i> Жаңа оқиға қосу</a>
+    <a href="{{ url_for('main.calendar') }}"><i class="bi bi-calendar3"></i> Күнтізбені ашу</a>
+    <a href="{{ url_for('main.reminders') }}"><i class="bi bi-bell"></i> Еске салулар</a>
+    <a href="{{ url_for('main.settings') }}"><i class="bi bi-gear"></i> Баптаулар</a>
+  </div>
+</div>
+{% endblock %}
