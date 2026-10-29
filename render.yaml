@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: esimde
+    runtime: python
+    plan: free
+    region: frankfurt
+    buildCommand: pip install -r requirements.txt
+    startCommand: python serve.py
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: BEHIND_PROXY
+        value: "1"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: TELEGRAM_BOT_USERNAME
+        value: EskeSalKzBot
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
